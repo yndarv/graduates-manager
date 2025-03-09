@@ -1,5 +1,5 @@
 import { authenticateUser } from '$lib/server/service/user';
-import { redirect, type Handle } from '@sveltejs/kit';
+import { error, redirect, type Handle } from '@sveltejs/kit';
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const token = event.cookies.get('token');
@@ -12,7 +12,13 @@ export const handle: Handle = async ({ event, resolve }) => {
 		event.cookies.delete('token', { path: '/' });
 	}
 
-	const protectedRoutes = ['/students'];
+	const apiRouteRegex = /^\/api\//;
+	if (apiRouteRegex.test(event.url.pathname) && !event.locals.user) {
+		console.log(`unauthorized API access attempt for ${event.url.pathname}`);
+		throw error(403, 'Forbidden');
+	}
+
+	const protectedRoutes = ['/graduates', '/dist', '/redist', '/unemployed'];
 	const isProtected = protectedRoutes.some((route) => event.url.pathname.startsWith(route));
 
 	if (isProtected && !event.locals.user) {
