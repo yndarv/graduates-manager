@@ -1,10 +1,18 @@
+import type { Graduate } from '$lib/model';
 import { db } from '$lib/server/db/index';
 import { graduate as graduateTable } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 
-type NewGraduate = typeof graduateTable.$inferInsert;
+function validateGraduate(graduate: Graduate) {
+	const { isDistributed, isUnemployed } = graduate;
+	return [isDistributed, isUnemployed].filter(Boolean).length < 2;
+}
 
-export async function createGraduate(graduate: NewGraduate) {
+export async function createGraduate(graduate: Graduate) {
+	if (!validateGraduate(graduate)) {
+		throw new Error('isDistributed and isUnemployed statuses are mutually exclusive');
+	}
+
 	const [insertedId] = await db
 		.insert(graduateTable)
 		.values(graduate)
@@ -23,7 +31,11 @@ export async function removeGraduate(id: number) {
 	return { removedId };
 }
 
-export async function updateGraduate(id: number, graduate: NewGraduate) {
+export async function updateGraduate(id: number, graduate: Graduate) {
+	if (!validateGraduate(graduate)) {
+		throw new Error('isDistributed and isUnemployed statuses are mutually exclusive');
+	}
+
 	const [updatedId] = await db
 		.update(graduateTable)
 		.set(graduate)
@@ -33,6 +45,13 @@ export async function updateGraduate(id: number, graduate: NewGraduate) {
 	return { updatedId };
 }
 
-export async function getAllGraduates() {
+export async function getAllGraduates(): Promise<Graduate[]> {
 	return await db.select().from(graduateTable);
+}
+
+export async function deleteGraduate(id: number) {
+	return await db
+		.delete(graduateTable)
+		.where(eq(graduateTable.id, id))
+		.returning({ deletedId: graduateTable.id });
 }
