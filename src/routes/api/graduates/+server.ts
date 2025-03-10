@@ -36,3 +36,14 @@ export async function PUT(event) {
 		err(500, message);
 	}
 }
+
+export async function DELETE(event) {
+	try {
+		const { id } = await event.request.json();
+		const { deletedId } = await deleteGraduate(id);
+		return json(deletedId);
+	} catch (error) {
+		console.error(error);
+		const message = 'Error occured while trying to delete graduate DELETE /api/graduate';
+	}
+}
