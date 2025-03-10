@@ -25,7 +25,7 @@ export async function POST(event) {
 	}
 }
 
-export async function PUT(event) {
+export async function PATCH(event) {
 	try {
 		const { id, graduate } = await event.request.json();
 		const { updatedId } = await updateGraduate(id, graduate);
